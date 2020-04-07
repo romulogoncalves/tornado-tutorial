@@ -187,3 +187,9 @@ await tornado.gen.multi([
 ### Development
 * [Python project templates](https://pypi.org/project/python-project-template/)
 * [Packing a python project](https://python-packaging.readthedocs.io/en/latest/everything.html)
+
+```
+pipenv install --python=/usr/bin/python3
+pipenv shell
+pip install .
+```
