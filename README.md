@@ -189,8 +189,3 @@ To understand how they work, the best is first start with
 and then check [blog example from tornado](https://github.com/tornadoweb/tornado/tree/stable/demos/blog).
 A minamalist example can be found [here](https://github.com/mehmetkose/tornado-user-authentication-example/blob/master/app.py).
 
-
-
-
-
- 
