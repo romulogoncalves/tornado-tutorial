@@ -1,4 +1,0 @@
-[console_scripts]
-initdb = todo.scripts.initializedb:main
-serve_app = todo:main
-

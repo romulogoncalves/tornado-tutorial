@@ -133,3 +133,5 @@ dmypy.json
 
 # Miscellaneous
 tutorial/templates/sass
+src/*.egg-info
+*.egg-info/
