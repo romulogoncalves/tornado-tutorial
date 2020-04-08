@@ -8,11 +8,13 @@ requires = [
     'psycopg2',
     'passlib',
     'aiopg',
-    'bcrypt'
+    'bcrypt',
+    'asyncio',
+    'markdown'
 ]
 
 setup(
-    name='tornado_todo',
+    name='tornado_tutorial',
     version='0.0',
     description='A tutorial with Tornado',
     author='Romulo Goncalves',
@@ -24,7 +26,9 @@ setup(
     entry_points={
         'console_scripts': [
             'serve_app = tutorial:main',
+            'blog_app = blog:main',
             'initdb = tutorial.scripts.initializedb:main',
+            'initBlogDB = blog.scripts.initializeBlogDB:main'
         ],
     },
 )
