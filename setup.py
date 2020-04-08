@@ -28,7 +28,7 @@ setup(
             'serve_app = tutorial:main',
             'blog_app = blog:main',
             'initdb = tutorial.scripts.initializedb:main',
-            'initBlogDB = blog.scripts.intializeBlogDB:main'
+            'initBlogDB = blog.scripts.initializeBlogDB:main'
         ],
     },
 )
