@@ -30,13 +30,6 @@ import unicodedata
 from tornado.options import define, options
 from blog.scripts.initializeBlogDB import maybe_create_tables
 
-define("port", default=8888, help="run on the given port", type=int)
-define("db_host", default="127.0.0.1", help="blog database host")
-define("db_port", default=5432, help="blog database port")
-define("db_database", default="blog", help="blog database name")
-define("db_user", default="blog", help="blog database user")
-define("db_password", default="blog", help="blog database password")
-
 
 class NoResultError(Exception):
     pass
