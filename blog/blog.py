@@ -14,13 +14,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import aiopg
+import logging
 import bcrypt
 import markdown
 import os.path
 import re
 import tornado.escape
-import tornado.httpserver
+from tornado.httpserver import HTTPServer
 import tornado.ioloop
 import tornado.locks
 import tornado.options
@@ -28,7 +28,7 @@ import tornado.web
 import unicodedata
 
 from tornado.options import define, options
-from blog.scripts.initializeBlogDB import maybe_create_tables
+from blog.scripts.initializeBlogDB import connect_to_db, disconnect_to_db, maybe_create_tables
 
 
 class NoResultError(Exception):
@@ -271,23 +271,13 @@ class EntryModule(tornado.web.UIModule):
         return self.render_string("modules/entry.html", entry=entry)
 
 
-async def main():
-    tornado.options.parse_command_line()
+def main():
+    db = tornado.ioloop.IOLoop.current().run_sync(connect_to_db)
+    app = Application(db)
+    app.listen(options.port)
 
-    # Create the global connection pool.
-    async with aiopg.create_pool(
-        host=options.db_host,
-        port=options.db_port,
-        user=options.db_user,
-        password=options.db_password,
-        dbname=options.db_database,
-    ) as db:
-        await maybe_create_tables(db)
-        app = Application(db)
-        app.listen(options.port)
-
-        # In this demo the server will simply run until interrupted
-        # with Ctrl-C, but if you want to shut down more gracefully,
-        # call shutdown_event.set().
-        shutdown_event = tornado.locks.Event()
-        await shutdown_event.wait()
+    http_server = HTTPServer(app)
+    http_server.listen(options.port)
+    logging.info('Listening on http://localhost:%d' % options.port)
+    tornado.ioloop.IOLoop.current().start()
+    tornado.ioloop.IOLoop.current().run_sync(disconnect_to_db)
