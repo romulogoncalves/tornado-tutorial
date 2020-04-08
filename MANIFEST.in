@@ -1,6 +1,7 @@
-include todo/static/favicon.ico
-include todo/static/css/*.css
-include todo/static/scripts/*js
-include todo/static/scripts/views/*js
-include todo/templates/*.html
-include todo/templates/favicon.ico
+include tutorial/static/favicon.ico
+include tutorial/static/css/*.css
+include tutorial/static/scripts/*js
+include tutorial/static/scripts/views/*js
+include tutorial/templates/*.html
+include tutorial/templates/favicon.ico
+include blog/scripts/schema.sql
