@@ -20,7 +20,7 @@ class StaticRequestHandler(tornado.web.RequestHandler):
         pass
 
     def get(self):
-        self.render("index_static.html")
+        self.render("index.html")
 
 
 class QueryStringRequestHandler(tornado.web.RequestHandler):
