@@ -25,10 +25,10 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'serve_app = task_manager:main',
+            'task_manager_app = task_manager:main',
             'blog_app = blog:main',
-            'initdb = task_manager.scripts.initializedb:main',
-            'initBlogDB = blog.scripts.initializeBlogDB:main'
+            'init_task_manager_db = task_manager.scripts.initializedb:main',
+            'init_blog_db = blog.scripts.initializeBlogDB:main'
         ],
     },
 )
