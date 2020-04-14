@@ -1,7 +1,7 @@
-include tutorial/static/favicon.ico
-include tutorial/static/css/*.css
-include tutorial/static/scripts/*js
-include tutorial/static/scripts/views/*js
-include tutorial/templates/*.html
-include tutorial/templates/favicon.ico
+include task_manager/static/favicon.ico
+include task_manager/static/css/*.css
+include task_manager/static/scripts/*js
+include task_manager/static/scripts/views/*js
+include task_manager/templates/*.html
+include task_manager/templates/favicon.ico
 include blog/scripts/schema.sql
