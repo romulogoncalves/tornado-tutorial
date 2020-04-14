@@ -3,7 +3,7 @@ import json
 import datetime
 from tornado.web import RequestHandler
 from tornado.gen import coroutine
-from tutorial.models import Profile, Task
+from task_manager.models import Profile, Task
 from tornado_sqlalchemy import SessionMixin
 from tornado_sqlalchemy import as_future
 

@@ -2,7 +2,7 @@
 import logging
 import os
 
-from tutorial.views import (
+from task_manager.views import (
     HomeView,
     InfoView,
     LoginView,
