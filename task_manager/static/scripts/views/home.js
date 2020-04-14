@@ -43,33 +43,6 @@ function post(path, parameters) {
     form.submit();
 }
 
-function get(path, parameters) {
-    var form = $('<form></form>');
-
-    form.attr("method", "get");
-    form.attr("action", path);
-
-    $.each(parameters, function(key, value) {
-        if ( typeof value == 'object' || typeof value == 'array' ){
-            $.each(value, function(subkey, subvalue) {
-                var field = $('<input />');
-                field.attr("type", "hidden");
-                field.attr("name", key+'[]');
-                field.attr("value", subvalue);
-                form.append(field);
-            });
-        } else {
-            var field = $('<input />');
-            field.attr("type", "hidden");
-            field.attr("name", key);
-            field.attr("value", value);
-            form.append(field);
-        }
-    });
-    $(document.body).append(form);
-    form.submit();
-}
-
 function loginHandler(event){
     event.preventDefault()
     let data = serializeFormData($(this))
@@ -83,8 +56,11 @@ function loginHandler(event){
         username: data.username,
         password: data.password,
     }
+
     var test = post('/api/v1/login', data_form)
+    // TODO: you need to wait to then render the profile. Or use intermediate page.
     page('/profile')
+
 }
 
 function reqListener () {
