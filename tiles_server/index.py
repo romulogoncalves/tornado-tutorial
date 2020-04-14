@@ -58,6 +58,10 @@ class ResponseHandler(tornado.web.RequestHandler):
     SUPPORTED_METHODS = "GET"
 
     """It will write a response as a Json object and set the status to 200_OK."""
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     def get(self, id):
         response = {
             'name': 'My Name',
@@ -72,7 +76,7 @@ if __name__ == "__main__":
     """
     The web.Application will create an App.
     The App will have request handlers. For different URLs, requests, we will have different handlers.
-    We can have requests of static pages, but also the request of pages with a query (/?itemid=30
+    We can have requests of static pages, but also the request of pages with a query (/?itemid=30)
     """
 
     app = tornado.web.Application([
