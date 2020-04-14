@@ -37,7 +37,7 @@ def main():
         (api_root + r'/accounts/([\w]+)/tasks', TaskListView),
         (api_root + r'/accounts/([\w]+)/tasks/([\d]+)', TaskView),
     ],
-        db=SQLAlchemy(os.environ.get('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/tornado_todo')),
+        db=SQLAlchemy(os.environ.get('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/task_manager')),
         cookie_secret=os.environ.get('SESSION_SECRET', 'beefy'),
         **options.group_dict('application'),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
