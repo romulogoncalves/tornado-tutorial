@@ -132,6 +132,6 @@ dmypy.json
 .idea
 
 # Miscellaneous
-tutorial/templates/sass
+task_manager/templates/sass
 src/*.egg-info
 *.egg-info/

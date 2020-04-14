@@ -1,7 +1,7 @@
 # initializedb.py
 from sqlalchemy import engine_from_config
-from tutorial import SQLALCHEMY_URL
-from tutorial.models import Base
+from task_manager import SQLALCHEMY_URL
+from task_manager.models import Base
 from sqlalchemy import create_engine
 import os
 

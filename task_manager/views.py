@@ -1,9 +1,11 @@
 # views.py
 import json
 import datetime
+from typing import Optional, Awaitable
+
 from tornado.web import RequestHandler
 from tornado.gen import coroutine
-from tutorial.models import Profile, Task
+from task_manager.models import Profile, Task
 from tornado_sqlalchemy import SessionMixin
 from tornado_sqlalchemy import as_future
 
@@ -14,12 +16,10 @@ class HomeView(RequestHandler):
         def get(self):
             self.render('index.html')
 
-class HelloWorld(RequestHandler):
-    """Print 'Hello, world!' as the response body."""
 
+class ErrorView(RequestHandler):
     def get(self):
-        """Handle a GET request for saying Hello World!."""
-        self.write("Hello, world!")
+        self.render('error_500.html')
 
 
 class BaseHandler(RequestHandler, SessionMixin):
@@ -105,6 +105,10 @@ class InfoView(RequestHandler):
 
 class RegistrationView(BaseHandler):
     """View for registering a new user."""
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     SUPPORTED_METHODS = ("POST",)
 
     @coroutine
@@ -124,8 +128,10 @@ class RegistrationView(BaseHandler):
                             self.send_response({'error': "Passwords don't match"}, status=400)
             except Exception as e:
                 print("We got an exception" + str(e))
-        print('We are done with the user registration!!!')
-        self.redirect('/')
+                self.redirect('/error_500')
+            else:
+                print('We are done with the user registration!!!')
+                self.redirect('/')
 
 
     def build_profile(self, session):

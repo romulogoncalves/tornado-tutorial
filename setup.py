@@ -25,9 +25,9 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'serve_app = tutorial:main',
+            'serve_app = task_manager:main',
             'blog_app = blog:main',
-            'initdb = tutorial.scripts.initializedb:main',
+            'initdb = task_manager.scripts.initializedb:main',
             'initBlogDB = blog.scripts.initializeBlogDB:main'
         ],
     },
