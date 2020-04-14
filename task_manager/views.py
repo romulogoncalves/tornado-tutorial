@@ -13,17 +13,26 @@ from passlib.hash import pbkdf2_sha256 as hasher
 
 
 class HomeView(RequestHandler):
-        def get(self):
-            self.render('index.html')
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
+    def get(self):
+        self.render('index.html')
 
 
 class ErrorView(RequestHandler):
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     def get(self):
         self.render('error_500.html')
 
 
 class BaseHandler(RequestHandler, SessionMixin):
     """Base request handler for all upcoming views."""
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
 
     def prepare(self):
         """Set up some attributes before any method receives the request."""
@@ -39,7 +48,8 @@ class BaseHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write(json.dumps(data))
 
-    def _convert_to_unicode(self, data_dict):
+    @staticmethod
+    def _convert_to_unicode(data_dict):
         """Convert the incoming data dictionary to have unicode values."""
         output = {key: [val.decode('utf8') for val in val_list] for key, val_list in data_dict.items()}
         return output
@@ -124,15 +134,14 @@ class RegistrationView(BaseHandler):
                         if self.form_data['password'] == self.form_data['password2']:
                             self.build_profile(session)
                             self.send_response({'msg': 'Profile created'}, status=201)
+                            self.redirect('/')
                         else:
                             self.send_response({'error': "Passwords don't match"}, status=400)
+                    else:
+                        self.send_response({'error': "Profiles already exists, please login."}, status=400)
             except Exception as e:
                 print("We got an exception" + str(e))
                 self.redirect('/error_500')
-            else:
-                print('We are done with the user registration!!!')
-                self.redirect('/')
-
 
     def build_profile(self, session):
         """Create new profile using information from incoming request."""
@@ -160,7 +169,7 @@ class ProfileView(AuthenticationMixin, BaseHandler):
                 self.authenticate_response(profile)
                 self.send_response(profile.to_dict())
             else:
-                self.send_response({'error': '111You do not have permission to access this profile.'}, status=403)
+                self.send_response({'error': 'You do not have permission to access this profile.'}, status=403)
 
     @coroutine
     def put(self, username):
@@ -171,7 +180,8 @@ class ProfileView(AuthenticationMixin, BaseHandler):
             if profile:
                 if 'username' in self.form_data:
                     profile.username = self.form_data['username'][0]
-                if 'password' in self.form_data and 'password2' in self.form_data and self.form_data['password'] == self.form_data['password2'] and self.form_data['password'][0] != '':
+                if 'password' in self.form_data and 'password2' in self.form_data and self.form_data['password'] == \
+                        self.form_data['password2'] and self.form_data['password'][0] != '':
                     profile.password = hasher.hash(self.form_data['password'][0])
                 if 'email' in self.form_data:
                     profile.email = self.form_data['email'][0]
@@ -292,25 +302,32 @@ class TaskView(AuthenticationMixin, BaseHandler):
                 self.send_response({'error': '666You do not have permission to access this data.'}, status=403)
 
 
-class LoginView(BaseHandler):
+class LoginView(AuthenticationMixin, BaseHandler):
     """View for logging in."""
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     SUPPORTED_METHODS = ("POST",)
 
+    @coroutine
     def post(self):
         """Log a user in."""
-        print("Get post")
-        needed = ['username', 'password']
-        if all([key in self.form_data for key in needed]):
-            with self.make_session() as session:
-                profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
-                if profile and hasher.verify(self.form_data['password'][0], profile.password):
-                    self.authenticate_response(profile)
-                    self.send_response({'msg': 'Authenticated'})
-                else:
-                    self.send_response({'error': 'Incorrect username/password combination.'}, status=400)
-
-        else:
-            self.send_response({'error': 'Some fields are missing'}, status=400)
+        try:
+            needed = ['username', 'password']
+            if all([key in self.form_data for key in needed]):
+                with self.make_session() as session:
+                    username = self.form_data['username'][0]
+                    profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
+                    if profile and hasher.verify(self.form_data['password'][0], profile.password):
+                        self.authenticate_response(profile)
+                        self.send_response({'msg': 'Authenticated'}, status=201)
+                    else:
+                        self.send_response({'error': 'Incorrect username/password combination.'}, status=400)
+            else:
+                self.send_response({'error': 'Some fields are missing'}, status=400)
+        except Exception as e:
+            self.send_response({'error': str(e)}, status=400)
 
 
 class LogoutView(BaseHandler):
