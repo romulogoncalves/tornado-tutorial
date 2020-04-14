@@ -4,6 +4,7 @@ import os
 
 from task_manager.views import (
     HomeView,
+    ErrorView,
     InfoView,
     LoginView,
     ProfileView,
@@ -28,6 +29,7 @@ def main():
     app = Application(handlers=[
         (r'/', HomeView),
         (r'/favicon.ico', HomeView),
+        (r'/error_500', ErrorView),
         (api_root, InfoView),
         (api_root + r'/login', LoginView),
         (api_root + r'/accounts', RegistrationView),
@@ -43,6 +45,7 @@ def main():
     )
     http_server = HTTPServer(app)
     http_server.listen(options.port)
+    print('Listening on http://localhost:%d' % options.port)
     logging.info('Listening on http://localhost:%d' % options.port)
     IOLoop.current().start()
 
