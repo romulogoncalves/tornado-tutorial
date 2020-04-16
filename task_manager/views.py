@@ -47,6 +47,8 @@ class BaseHandler(RequestHandler, SessionMixin):
         """Construct and send a JSON response with appropriate status code."""
         self.set_status(status)
         self.write(json.dumps(data))
+        self.flush()
+        self.finish()
 
     @staticmethod
     def _convert_to_unicode(data_dict):
@@ -321,7 +323,7 @@ class LoginView(AuthenticationMixin, BaseHandler):
                     profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
                     if profile and hasher.verify(self.form_data['password'][0], profile.password):
                         self.authenticate_response(profile)
-                        self.send_response({'msg': 'Authenticated'}, status=201)
+                        self.send_response({'msg': 'Login succeeded. Please proceed.'}, status=201)
                     else:
                         self.send_response({'error': 'Incorrect username/password combination.'}, status=400)
             else:
