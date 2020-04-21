@@ -78,7 +78,6 @@ function loginHandler(event){
         body: user,
     }
 
-    //var test = post('/api/v1/login', data_form)
     fetch('/api/v1/login', options).then(res => {
         if (res.ok) {
             return res.json();
@@ -114,14 +113,44 @@ function registrationHandler(event){
         username: data.username,
         token: 'l8xQ8o4dIRXvDA'
     })
+
     console.log("Send Post")
-    var data_form = {
+    const data_form = {
         username: data.username,
         email: data.email,
         password: data.password,
         password2: data.password2
     }
-    var test = post('/api/v1/accounts', data_form)
-    console.log(this.responseText)
-    page('/')
+
+    user = create_form(data_form)
+    const options = {
+        method: 'POST',
+        body: user,
+    }
+
+    fetch('/api/v1/accounts', options).then( res => {
+        if (res.ok) {
+            console.log("The status is " + res.status)
+            res.json().then(res => { alert(res.msg); page('/profile')});
+            return;
+        } else {
+            if (res.status == 500) {
+                alert(res.statusText);
+                clearMain();
+                localStorage.clear();
+                page.redirect('/')
+                return;
+            } else {
+                return Promise.reject(res.json());
+            }
+        }
+    }).catch(err =>
+        { err.then ( err =>
+            {
+                alert("Registration failed: " + err.error);
+                clearMain();
+                localStorage.clear();
+                page.redirect('/')
+            });
+        });
 }

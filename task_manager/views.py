@@ -47,8 +47,6 @@ class BaseHandler(RequestHandler, SessionMixin):
         """Construct and send a JSON response with appropriate status code."""
         self.set_status(status)
         self.write(json.dumps(data))
-        self.flush()
-        self.finish()
 
     @staticmethod
     def _convert_to_unicode(data_dict):
@@ -136,14 +134,13 @@ class RegistrationView(BaseHandler):
                         if self.form_data['password'] == self.form_data['password2']:
                             self.build_profile(session)
                             self.send_response({'msg': 'Profile created'}, status=201)
-                            self.redirect('/')
                         else:
                             self.send_response({'error': "Passwords don't match"}, status=400)
                     else:
                         self.send_response({'error': "Profiles already exists, please login."}, status=400)
             except Exception as e:
-                print("We got an exception" + str(e))
-                self.redirect('/error_500')
+                print("Exception occurred: " + str(e))
+                self.set_status(status_code=500, reason="Backend server is down!!!")
 
     def build_profile(self, session):
         """Create new profile using information from incoming request."""
