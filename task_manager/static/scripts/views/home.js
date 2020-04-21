@@ -8,41 +8,6 @@ function serializeFormData(form) {
     return data
 }
 
-/**
- * sends a request to the specified url from a form. this will change the window location.
- * @param {string} path the path to send the post request to
- * @param {object} params the paramiters to add to the url
- * @param {string} [method=post] the method to use on the form
- */
-
-//https://gist.github.com/hom3chuk/692bf12fe7dac2486212
-function post(path, parameters) {
-    var form = $('<form></form>');
-
-    form.attr("method", "post");
-    form.attr("action", path);
-
-    $.each(parameters, function(key, value) {
-        if ( typeof value == 'object' || typeof value == 'array' ){
-            $.each(value, function(subkey, subvalue) {
-                var field = $('<input />');
-                field.attr("type", "hidden");
-                field.attr("name", key+'[]');
-                field.attr("value", subvalue);
-                form.append(field);
-            });
-        } else {
-            var field = $('<input />');
-            field.attr("type", "hidden");
-            field.attr("name", key);
-            field.attr("value", value);
-            form.append(field);
-        }
-    });
-    $(document.body).append(form);
-    form.submit();
-}
-
 function create_form(parameters) {
     let formData = new FormData();
     $.each(parameters, function(key, value) {
