@@ -31,7 +31,6 @@ function loginHandler(event){
         username: data.username,
         token: 'l8xQ8o4dIRXvDA'
     })
-    console.log("Send Post")
     const data_form = {
         username: data.username,
         password: data.password,
@@ -49,7 +48,7 @@ function loginHandler(event){
         } else {
             return Promise.reject(res.json());
         }
-        }).then(response => { alert(response.msg); page('/profile')})
+        }).then(response => { alert(response.msg); page.redirect('/profile'); return})
         .catch(err => { err.then(err => {
             alert("Login failed: " + err.error); clearMain(); localStorage.clear(); page.redirect('/')});
         });

@@ -163,7 +163,6 @@ class ProfileView(AuthenticationMixin, BaseHandler):
         """Handle incoming get request for a specific user's profile."""
         with self.make_session() as session:
             profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
-            print('Profile name is ' + Profile.username + ' and the username is ' + username)
             if profile:
                 self.authenticate_response(profile)
                 self.send_response(profile.to_dict())
