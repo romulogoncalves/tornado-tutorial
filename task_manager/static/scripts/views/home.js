@@ -23,14 +23,27 @@ function create_form(parameters) {
     return formData
 }
 
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function loginHandler(event){
     event.preventDefault()
     let data = serializeFormData($(this))
-    // TODO: handle actual login. This is a placeholder for front-end functionality
-    localStorage.user = JSON.stringify({
-        username: data.username,
-        token: 'l8xQ8o4dIRXvDA'
-    })
+
+    var xrsf = getCookie('_xsrf')
     const data_form = {
         username: data.username,
         password: data.password,
@@ -39,6 +52,9 @@ function loginHandler(event){
     user = create_form(data_form)
     const options = {
         method: 'POST',
+        headers: new Headers({
+            'X-Xsrftoken': xrsf
+        }),
         body: user,
     }
 
@@ -48,8 +64,15 @@ function loginHandler(event){
         } else {
             return Promise.reject(res.json());
         }
-        }).then(response => { alert(response.msg); page.redirect('/profile'); return})
-        .catch(err => { err.then(err => {
+        }).then(response => {
+                alert(response.msg);
+                localStorage.user = JSON.stringify({
+                    username: data.username,
+                    auth_token: getCookie('auth_token')
+                });
+                page.redirect('/profile');
+                return;
+        }).catch(err => { err.then(err => {
             alert("Login failed: " + err.error); clearMain(); localStorage.clear(); page.redirect('/')});
         });
 
@@ -72,23 +95,21 @@ function reqListener () {
 function registrationHandler(event){
     event.preventDefault()
     let data = serializeFormData($(this))
-    // TODO: handle actual registration. This is a placeholder for front-end functionality
-    localStorage.user = JSON.stringify({
-        username: data.username,
-        token: 'l8xQ8o4dIRXvDA'
-    })
 
-    console.log("Send Post")
+    var xrsf = getCookie('_xsrf')
     const data_form = {
         username: data.username,
         email: data.email,
         password: data.password,
-        password2: data.password2
+        password2: data.password2,
     }
 
     user = create_form(data_form)
     const options = {
         method: 'POST',
+        headers: new Headers({
+            'X-Xsrftoken': xrsf
+        }),
         body: user,
     }
 
@@ -96,6 +117,10 @@ function registrationHandler(event){
         if (res.ok) {
             console.log("The status is " + res.status)
             res.json().then(res => { alert(res.msg); page('/profile')});
+            localStorage.user = JSON.stringify({
+                username: data.username,
+                token: $(document)
+            })
             return;
         } else {
             if (res.status == 500) {
