@@ -38,8 +38,11 @@ def main():
         (api_root + r'/accounts/([\w]+)/tasks/([\d]+)', TaskView),
     ],
         db=SQLAlchemy(os.environ.get('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/task_manager')),
-        cookie_secret=os.environ.get('SESSION_SECRET', 'beefy'),
+        cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
         **options.group_dict('application'),
+        login_url="/api/v1/login",
+        xsrf_cookies=True,
+        debug=True,
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         template_path=os.path.join(os.path.dirname(__file__), "templates")
     )
