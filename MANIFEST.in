@@ -5,3 +5,6 @@ include task_manager/static/scripts/views/*js
 include task_manager/templates/*.html
 include task_manager/templates/favicon.ico
 include blog/scripts/schema.sql
+include blog/static/css/*.css
+include blog/templates/*.html
+include blog/templates/modules/*.html
