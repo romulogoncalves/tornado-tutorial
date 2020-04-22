@@ -8,6 +8,7 @@ from tornado.gen import coroutine
 from task_manager.models import Profile, Task
 from tornado_sqlalchemy import SessionMixin
 from tornado_sqlalchemy import as_future
+from tornado import escape
 
 from passlib.hash import pbkdf2_sha256 as hasher
 
@@ -17,6 +18,7 @@ class HomeView(RequestHandler):
         pass
 
     def get(self):
+        self.xsrf_token
         self.render('index.html')
 
 
@@ -66,22 +68,27 @@ class AuthenticationMixin:
             self.finish()
 
     def get_current_user(self):
-        token_cookie = self.get_secure_cookie('token')
+        token_cookie = escape.native_str(self.get_secure_cookie('auth_token'))
         if token_cookie:
             username, token = token_cookie.split(':')
             with self.make_session() as session:
-                profile = session.query(Profile).filter(Profile.username == username).first()
+                try:
+                    profile = session.query(Profile).filter(Profile.username == username).first()
+                except Exception as e:
+                    print("Profile could not be loaded: " + str(e))
                 if profile and profile.token == token:
                     return True
+                else:
+                    return False
         else:
-            return True
+            return False
 
     def authenticate_response(self, profile):
         token_cookie = f"{profile.username}:{profile.token}"
         self.set_secure_cookie('auth_token', token_cookie)
 
     def send_forbidden_response(self):
-        data = {'error': '777You do not have permission to access this profile.'}
+        data = {'error': 'You do not have permission to access this profile.'}
         self.set_status(403)
         self.write(json.dumps(data))
 
@@ -335,3 +342,5 @@ class LogoutView(BaseHandler):
     def get(self):
         """Log a user out."""
         self.send_response({'msg': 'Logged out.'})
+        self.clear_cookie("auth_token")
+        self.redirect(self.get_argument("next", "/"))
