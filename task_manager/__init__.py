@@ -46,7 +46,6 @@ def main():
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         template_path=os.path.join(os.path.dirname(__file__), "templates")
     )
-    print(str(os.path.join(os.path.dirname(__file__), "static")))
     http_server = HTTPServer(app)
     http_server.listen(options.port)
     print('Listening on http://localhost:%d' % options.port)
