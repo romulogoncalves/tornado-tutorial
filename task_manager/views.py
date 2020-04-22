@@ -9,6 +9,7 @@ from task_manager.models import Profile, Task
 from tornado_sqlalchemy import SessionMixin
 from tornado_sqlalchemy import as_future
 from tornado import escape
+import tornado.web
 
 from passlib.hash import pbkdf2_sha256 as hasher
 
@@ -38,6 +39,7 @@ class BaseHandler(RequestHandler, SessionMixin):
 
     def prepare(self):
         """Set up some attributes before any method receives the request."""
+
         self.form_data = self._convert_to_unicode(self.request.arguments)
         self.response = {}
 
@@ -49,6 +51,10 @@ class BaseHandler(RequestHandler, SessionMixin):
         """Construct and send a JSON response with appropriate status code."""
         self.set_status(status)
         self.write(json.dumps(data))
+
+    def authenticate_response(self, profile):
+        token_cookie = f"{profile.username}:{profile.token}"
+        self.set_secure_cookie('auth_token', token_cookie)
 
     @staticmethod
     def _convert_to_unicode(data_dict):
@@ -77,15 +83,14 @@ class AuthenticationMixin:
                 except Exception as e:
                     print("Profile could not be loaded: " + str(e))
                 if profile and profile.token == token:
+                    print("Return True")
                     return True
                 else:
+                    print("Return False")
                     return False
         else:
+            print("Return False 2")
             return False
-
-    def authenticate_response(self, profile):
-        token_cookie = f"{profile.username}:{profile.token}"
-        self.set_secure_cookie('auth_token', token_cookie)
 
     def send_forbidden_response(self):
         data = {'error': 'You do not have permission to access this profile.'}
@@ -168,6 +173,11 @@ class ProfileView(AuthenticationMixin, BaseHandler):
     @coroutine
     def get(self, username):
         """Handle incoming get request for a specific user's profile."""
+        if not self.current_user:
+            self.redirect("/login")
+            return
+        else:
+            print("The current user is: " + str(self.current_user))
         with self.make_session() as session:
             profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
             if profile:
@@ -307,7 +317,8 @@ class TaskView(AuthenticationMixin, BaseHandler):
                 self.send_response({'error': '666You do not have permission to access this data.'}, status=403)
 
 
-class LoginView(AuthenticationMixin, BaseHandler):
+#class LoginView(AuthenticationMixin, BaseHandler):
+class LoginView(BaseHandler):
     """View for logging in."""
 
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
@@ -339,8 +350,9 @@ class LogoutView(BaseHandler):
     """View for logging out."""
     SUPPORTED_METHODS = ("GET",)
 
-    def get(self):
+    @coroutine
+    def get(self, username):
         """Log a user out."""
-        self.send_response({'msg': 'Logged out.'})
+        print("User "+ username + " will logout")
         self.clear_cookie("auth_token")
-        self.redirect(self.get_argument("next", "/"))
+        self.redirect("/")

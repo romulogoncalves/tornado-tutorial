@@ -44,7 +44,31 @@ function profileController() {
 }
 
 function logoutController() {
-    clearMain()
-    localStorage.clear()
-    page.redirect('/')
+    if (localStorage.getItem('user') == null) {
+        alert("You need first to login!!!")
+        page.redirect('/')
+    } else {
+        const options = {
+            method: 'GET',
+        }
+        var url = '/api/v1/accounts/' + JSON.parse(localStorage.getItem('user')).username + '/logout';
+        console.log(url)
+        fetch(url, options).then((res) => {
+            if (res.ok) {
+                clearMain()
+                localStorage.clear()
+                page.redirect('/')
+                return;
+            } else {
+                return Promise.reject(res.json());
+            }
+        }).catch(err =>
+            { err.then ( err => {
+                alert("Logout failed: " + err.error);
+                clearMain();
+                localStorage.clear();
+                page.redirect('/')
+            });
+        });
+    }
 }

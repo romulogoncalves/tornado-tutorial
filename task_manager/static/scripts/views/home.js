@@ -66,10 +66,8 @@ function loginHandler(event){
         }
         }).then(response => {
                 alert(response.msg);
-                localStorage.user = JSON.stringify({
-                    username: data.username,
-                    auth_token: getCookie('auth_token')
-                });
+                var user_data = { 'username': data.username, 'auth_token': getCookie('auth_token') }
+                localStorage.setItem('user', JSON.stringify(user_data));
                 page.redirect('/profile');
                 return;
         }).catch(err => { err.then(err => {
@@ -119,7 +117,7 @@ function registrationHandler(event){
             res.json().then(res => { alert(res.msg); page('/profile')});
             localStorage.user = JSON.stringify({
                 username: data.username,
-                token: $(document)
+                token: getCookie('auth_token')
             })
             return;
         } else {
