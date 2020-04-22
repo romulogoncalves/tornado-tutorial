@@ -83,13 +83,10 @@ class AuthenticationMixin:
                 except Exception as e:
                     print("Profile could not be loaded: " + str(e))
                 if profile and profile.token == token:
-                    print("Return True")
                     return True
                 else:
-                    print("Return False")
                     return False
         else:
-            print("Return False 2")
             return False
 
     def send_forbidden_response(self):
@@ -176,8 +173,6 @@ class ProfileView(AuthenticationMixin, BaseHandler):
         if not self.current_user:
             self.redirect("/login")
             return
-        else:
-            print("The current user is: " + str(self.current_user))
         with self.make_session() as session:
             profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
             if profile:
@@ -317,7 +312,6 @@ class TaskView(AuthenticationMixin, BaseHandler):
                 self.send_response({'error': '666You do not have permission to access this data.'}, status=403)
 
 
-#class LoginView(AuthenticationMixin, BaseHandler):
 class LoginView(BaseHandler):
     """View for logging in."""
 
@@ -353,6 +347,5 @@ class LogoutView(BaseHandler):
     @coroutine
     def get(self, username):
         """Log a user out."""
-        print("User "+ username + " will logout")
         self.clear_cookie("auth_token")
         self.redirect("/")
