@@ -8,16 +8,25 @@ from tornado.gen import coroutine
 from task_manager.models import Profile, Task
 from tornado_sqlalchemy import SessionMixin
 from tornado_sqlalchemy import as_future
+from tornado import escape
+import tornado.web
 
 from passlib.hash import pbkdf2_sha256 as hasher
 
 
 class HomeView(RequestHandler):
-        def get(self):
-            self.render('index.html')
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
+    def get(self):
+        self.xsrf_token
+        self.render('index.html')
 
 
 class ErrorView(RequestHandler):
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     def get(self):
         self.render('error_500.html')
 
@@ -25,8 +34,12 @@ class ErrorView(RequestHandler):
 class BaseHandler(RequestHandler, SessionMixin):
     """Base request handler for all upcoming views."""
 
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     def prepare(self):
         """Set up some attributes before any method receives the request."""
+
         self.form_data = self._convert_to_unicode(self.request.arguments)
         self.response = {}
 
@@ -39,7 +52,12 @@ class BaseHandler(RequestHandler, SessionMixin):
         self.set_status(status)
         self.write(json.dumps(data))
 
-    def _convert_to_unicode(self, data_dict):
+    def authenticate_response(self, profile):
+        token_cookie = f"{profile.username}:{profile.token}"
+        self.set_secure_cookie('auth_token', token_cookie)
+
+    @staticmethod
+    def _convert_to_unicode(data_dict):
         """Convert the incoming data dictionary to have unicode values."""
         output = {key: [val.decode('utf8') for val in val_list] for key, val_list in data_dict.items()}
         return output
@@ -56,22 +74,23 @@ class AuthenticationMixin:
             self.finish()
 
     def get_current_user(self):
-        token_cookie = self.get_secure_cookie('token')
+        token_cookie = escape.native_str(self.get_secure_cookie('auth_token'))
         if token_cookie:
             username, token = token_cookie.split(':')
             with self.make_session() as session:
-                profile = session.query(Profile).filter(Profile.username == username).first()
+                try:
+                    profile = session.query(Profile).filter(Profile.username == username).first()
+                except Exception as e:
+                    print("Profile could not be loaded: " + str(e))
                 if profile and profile.token == token:
                     return True
+                else:
+                    return False
         else:
-            return True
-
-    def authenticate_response(self, profile):
-        token_cookie = f"{profile.username}:{profile.token}"
-        self.set_secure_cookie('auth_token', token_cookie)
+            return False
 
     def send_forbidden_response(self):
-        data = {'error': '777You do not have permission to access this profile.'}
+        data = {'error': 'You do not have permission to access this profile.'}
         self.set_status(403)
         self.write(json.dumps(data))
 
@@ -126,13 +145,11 @@ class RegistrationView(BaseHandler):
                             self.send_response({'msg': 'Profile created'}, status=201)
                         else:
                             self.send_response({'error': "Passwords don't match"}, status=400)
+                    else:
+                        self.send_response({'error': "Profiles already exists, please login."}, status=400)
             except Exception as e:
-                print("We got an exception" + str(e))
-                self.redirect('/error_500')
-            else:
-                print('We are done with the user registration!!!')
-                self.redirect('/')
-
+                print("Exception occurred: " + str(e))
+                self.set_status(status_code=500, reason="Backend server is down!!!")
 
     def build_profile(self, session):
         """Create new profile using information from incoming request."""
@@ -153,14 +170,16 @@ class ProfileView(AuthenticationMixin, BaseHandler):
     @coroutine
     def get(self, username):
         """Handle incoming get request for a specific user's profile."""
+        if not self.current_user:
+            self.redirect("/login")
+            return
         with self.make_session() as session:
             profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
-            print('Profile name is ' + Profile.username + ' and the username is ' + username)
             if profile:
                 self.authenticate_response(profile)
                 self.send_response(profile.to_dict())
             else:
-                self.send_response({'error': '111You do not have permission to access this profile.'}, status=403)
+                self.send_response({'error': 'You do not have permission to access this profile.'}, status=403)
 
     @coroutine
     def put(self, username):
@@ -171,7 +190,8 @@ class ProfileView(AuthenticationMixin, BaseHandler):
             if profile:
                 if 'username' in self.form_data:
                     profile.username = self.form_data['username'][0]
-                if 'password' in self.form_data and 'password2' in self.form_data and self.form_data['password'] == self.form_data['password2'] and self.form_data['password'][0] != '':
+                if 'password' in self.form_data and 'password2' in self.form_data and self.form_data['password'] == \
+                        self.form_data['password2'] and self.form_data['password'][0] != '':
                     profile.password = hasher.hash(self.form_data['password'][0])
                 if 'email' in self.form_data:
                     profile.email = self.form_data['email'][0]
@@ -294,29 +314,38 @@ class TaskView(AuthenticationMixin, BaseHandler):
 
 class LoginView(BaseHandler):
     """View for logging in."""
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
+
     SUPPORTED_METHODS = ("POST",)
 
+    @coroutine
     def post(self):
         """Log a user in."""
-        print("Get post")
-        needed = ['username', 'password']
-        if all([key in self.form_data for key in needed]):
-            with self.make_session() as session:
-                profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
-                if profile and hasher.verify(self.form_data['password'][0], profile.password):
-                    self.authenticate_response(profile)
-                    self.send_response({'msg': 'Authenticated'})
-                else:
-                    self.send_response({'error': 'Incorrect username/password combination.'}, status=400)
-
-        else:
-            self.send_response({'error': 'Some fields are missing'}, status=400)
+        try:
+            needed = ['username', 'password']
+            if all([key in self.form_data for key in needed]):
+                with self.make_session() as session:
+                    username = self.form_data['username'][0]
+                    profile = yield as_future(session.query(Profile).filter(Profile.username == username).first)
+                    if profile and hasher.verify(self.form_data['password'][0], profile.password):
+                        self.authenticate_response(profile)
+                        self.send_response({'msg': 'Login succeeded. Please proceed.'}, status=201)
+                    else:
+                        self.send_response({'error': 'Incorrect username/password combination.'}, status=400)
+            else:
+                self.send_response({'error': 'Some fields are missing'}, status=400)
+        except Exception as e:
+            self.send_response({'error': str(e)}, status=400)
 
 
 class LogoutView(BaseHandler):
     """View for logging out."""
     SUPPORTED_METHODS = ("GET",)
 
-    def get(self):
+    @coroutine
+    def get(self, username):
         """Log a user out."""
-        self.send_response({'msg': 'Logged out.'})
+        self.clear_cookie("auth_token")
+        self.redirect("/")
